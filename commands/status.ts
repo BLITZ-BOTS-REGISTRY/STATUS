@@ -4,7 +4,6 @@ export default {
   data: new SlashCommandBuilder()
     .setName("status")
     .setDescription("Set your bot's status with activity type and custom text"),
-
   action: async (client, interaction, config) => {
     if (!config.bot_owner_id) {
       console.log("Error: bot_owner_id is not specified in the configuration file.");
@@ -14,7 +13,6 @@ export default {
       });
       return;
     }
-
     if (interaction.user.id !== config.bot_owner_id) {
       await interaction.reply({
         content: "You are not authorized to use this command.",
@@ -29,15 +27,15 @@ export default {
 
     const activityTypeInput = new TextInputBuilder()
       .setCustomId("activity-type")
-      .setLabel("Activity Type")
-      .setPlaceholder("Choose from: playing, listening, watching, custom")
+      .setLabel("Activity Type (playing, listening, watching, etc.)")
+      .setPlaceholder("Choose from: playing, listening, watching, competing")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
     const statusInput = new TextInputBuilder()
       .setCustomId("status")
-      .setLabel("Status")
-      .setPlaceholder("Choose from: online, dnd, idle, offline")
+      .setLabel("Status (online, dnd, idle, offline, custom)")
+      .setPlaceholder("Choose from: online, dnd, idle, offline, custom")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
@@ -55,60 +53,58 @@ export default {
     modal.addComponents(activityTypeRow, statusRow, customTextRow);
 
     await interaction.showModal(modal);
+  },
+  onInteraction: async (interaction, client) => {
+    if (!interaction.isModalSubmit()) return;
 
-    client.on("interactionCreate", async (interaction) => {
-      if (!interaction.isModalSubmit()) return;
+    if (interaction.customId === "status-modal") {
+      const activityType = interaction.fields.getTextInputValue("activity-type").toLowerCase();
+      const status = interaction.fields.getTextInputValue("status").toLowerCase();
+      const customText = interaction.fields.getTextInputValue("custom-text");
 
-      if (interaction.customId === "status-modal") {
-        const activityType = interaction.fields.getTextInputValue("activity-type").toLowerCase();
-        const status = interaction.fields.getTextInputValue("status").toLowerCase();
-        const customText = interaction.fields.getTextInputValue("custom-text");
+      const validActivityTypes = ["playing", "listening", "watching", "competing"];
+      const validStatuses = ["online", "dnd", "idle", "offline", "custom"];
 
-        const validActivityTypes = ["playing", "listening", "watching", "custom"];
-        const validStatuses = ["online", "dnd", "idle", "offline"];
+      if (!validActivityTypes.includes(activityType)) {
+        await interaction.reply({
+          content: `Invalid activity type! Please choose one of: ${validActivityTypes.join(", ")}`,
+          ephemeral: true,
+        });
+        return;
+      }
 
-        if (!validActivityTypes.includes(activityType)) {
-          await interaction.reply({
-            content: `Invalid activity type! Please choose one of: ${validActivityTypes.join(", ")}`,
-            ephemeral: true,
-          });
-          return;
-        }
+      if (!validStatuses.includes(status)) {
+        await interaction.reply({
+          content: `Invalid status! Please choose one of: ${validStatuses.join(", ")}`,
+          ephemeral: true,
+        });
+        return;
+      }
 
-        if (!validStatuses.includes(status)) {
-          await interaction.reply({
-            content: `Invalid status! Please choose one of: ${validStatuses.join(", ")}`,
-            ephemeral: true,
-          });
-          return;
-        }
+      try {
+        const presenceOptions = {
+          activities: [
+            {
+              name: customText || "No activity set",
+              type: activityType.toUpperCase(),
+            },
+          ],
+          status: status.toUpperCase(),
+        };
 
-        let activityTypeEnum;
-        switch (activityType) {
-          case "playing":
-            activityTypeEnum = "PLAYING";
-            break;
-          case "listening":
-            activityTypeEnum = "LISTENING";
-            break;
-          case "watching":
-            activityTypeEnum = "WATCHING";
-            break;
-          case "custom":
-            activityTypeEnum = "CUSTOM";
-            break;
-          default:
-            activityTypeEnum = "PLAYING"; 
-        }
-
-        await client.user.setActivity(customText,{ type: activityTypeEnum });
-        await client.user.setStatus(status);
+        await client.user.setPresence(presenceOptions);
 
         await interaction.reply({
           content: `Your bot's status has been updated:\n**Activity Type:** ${activityType}\n**Status:** ${status}\n**Text:** ${customText || "None"}`,
           ephemeral: true,
         });
+      } catch (error) {
+        console.error("Error setting bot presence:", error);
+        await interaction.reply({
+          content: "An error occurred while updating the bot's status.",
+          ephemeral: true,
+        });
       }
-    });
+    }
   },
 };
