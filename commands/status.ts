@@ -27,14 +27,14 @@ export default {
 
     const activityTypeInput = new TextInputBuilder()
       .setCustomId("activity-type")
-      .setLabel("Activity Type (playing, listening, watching, etc.)")
+      .setLabel("Activity Type")
       .setPlaceholder("Choose from: playing, listening, watching, competing")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
     const statusInput = new TextInputBuilder()
       .setCustomId("status")
-      .setLabel("Status (online, dnd, idle, offline, custom)")
+      .setLabel("Status")
       .setPlaceholder("Choose from: online, dnd, idle, offline, custom")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
