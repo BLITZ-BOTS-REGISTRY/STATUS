@@ -1,5 +1,5 @@
 name: status
 description: Manage the bots status via /status
-version: 1.4.0
+version: 1.5.0
 config:
        bot_owner_id: yourid
