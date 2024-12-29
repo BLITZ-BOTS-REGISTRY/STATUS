@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType } from "npm:discord.js";
+import { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
